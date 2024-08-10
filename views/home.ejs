@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Url Shortener</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      integrity="sha512-Fo3rlrZj/kTcG1c3GAA6gWQChnOKc4rsXLp76nt4y61VtyX6TfTQ4UOVTp6R4sQ5erKz7g8Ue1V1D2kFsn0w6w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <style>
+      .copy-btn {
+        transition: background-color 0.3s, color 0.3s;
+      }
+      .copy-btn.copied {
+        background-color: #48bb78;
+        color: white;
+      }
+    </style>
+    <script
+      src="https://kit.fontawesome.com/530f56e567.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto p-4">
+      <h1 class="text-3xl font-bold text-center mb-8">URL Shortener</h1>
+
+      <% if (locals.id) { %>
+      <div
+        class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4"
+        role="alert"
+      >
+        <span class="block sm:inline">
+          Shortened URL:
+          <a
+            href="http://localhost:3001/url/<%= id %>"
+            class="font-bold text-blue-500"
+            target="_blank"
+            >http://localhost:3001/url/<%= id %></a
+          >
+        </span>
+        <button
+          onclick="copyToClipboard('http://localhost:3001/url/<%= id %>', this)"
+          class="ml-2 bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-700 copy-btn"
+        >
+          <i class="far fa-copy"></i>
+        </button>
+      </div>
+      <% } %> <% if (locals.error) { %>
+      <div
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+        role="alert"
+      >
+        <span class="block sm:inline"><%= error %> </span>
+      </div>
+      <% } %>
+
+      <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <form method="POST" action="/url">
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Enter your URL:</label
+          >
+          <input
+            type="text"
+            name="url"
+            placeholder="https://google.com"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+          />
+          <button
+            type="submit"
+            class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-700"
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+
+      <% if (locals.urls) { %>
+      <div class="mt-8">
+        <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="text-center px-4 py-2">S No.</th>
+              <th class="text-center px-4 py-2">Redirect to</th>
+              <th class="text-center px-4 py-2">Shorten URL</th>
+              <th class="text-center px-4 py-2"></th>
+              <th class="text-center px-4 py-2">Total Clicks</th>
+              <th class="text-center px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% urls.forEach((url, index) => { %>
+            <tr class="border-t">
+              <td class="text-center px-4 py-2"><%= index + 1 %></td>
+              <td class="text-center px-4 py-2">
+                <a href="<%= url.redirectURL %>" class="text-blue-500"
+                  ><%= url.redirectURL %></a
+                >
+              </td>
+              <td class="text-center px-4 py-2">
+                <a
+                  href="http://localhost:3001/url/<%= url.shortId %>"
+                  class="text-blue-500"
+                  target="_blank"
+                  >http://localhost:3001/url/<%= url.shortId %></a
+                >
+              </td>
+              <td class="text-center px-4 py-2">
+                <button
+                  onclick="copyToClipboard('http://localhost:3001/url/<%= url.shortId %>', this)"
+                  class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-700 copy-btn"
+                >
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </td>
+              <td class="px-4 py-2 text-center">
+                <%= url?.visitHistory?.length %>
+              </td>
+              <td class="text-center px-4 py-2">
+                <button
+                  onclick="deleteURL('<%= url.shortId %>', this)"
+                  class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-700 delete-btn"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+
+    <script>
+      function copyToClipboard(text, button) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        button.classList.add("copied");
+        button.innerHTML = '<i class="fa-solid fa-check"></i>';
+
+        setTimeout(() => {
+          button.classList.remove("copied");
+          button.innerHTML = '<i class="fa-solid fa-copy"></i>';
+        }, 2000);
+      }
+
+      async function deleteURL(shortId, button) {
+        const response = await fetch(`/url/${shortId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          const row = button.closest("tr");
+          row.remove();
+        } else {
+          alert("Failed to delete the URL");
+        }
+      }
+    </script>
+  </body>
+</html>
