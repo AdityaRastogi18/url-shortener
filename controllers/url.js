@@ -42,6 +42,7 @@ const handleNewShortURL = async (req, res) => {
 };
 
 const handleRedirectURL = async (req, res) => {
+  console.log("req", req);
   const shortId = req.params.shortId;
   const entry = await URLShortner.findOneAndUpdate(
     { shortId },
