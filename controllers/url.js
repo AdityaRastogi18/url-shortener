@@ -12,13 +12,15 @@ const isValidURL = (url) => {
 };
 
 const handleNewShortURL = async (req, res) => {
-  const { url } = req.body;
+  const { url, slug } = req.body;
 
   if (!url || !isValidURL(url)) {
     return res.status(400).render("home", {
       error: "Must provide a valid URL!",
     });
   }
+
+  console.log("req.body", req.body);
 
   const existingURL = await URLShortner.findOne({ redirectURL: url });
   if (existingURL) {
@@ -31,7 +33,7 @@ const handleNewShortURL = async (req, res) => {
   const shortId = uid.rnd();
 
   await URLShortner.create({
-    shortId,
+    shortId: slug,
     redirectURL: url,
     visitHistory: [],
   });

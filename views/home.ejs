@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Url Shortener</title>
+    <title>URL Shortener</title>
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
@@ -15,7 +15,6 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-
     <style>
       .copy-btn {
         transition: background-color 0.3s, color 0.3s;
@@ -23,6 +22,27 @@
       .copy-btn.copied {
         background-color: #48bb78;
         color: white;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 100%;
+      }
+      .modal.show {
+        display: flex;
       }
     </style>
     <script
@@ -34,54 +54,80 @@
     <div class="container mx-auto p-4">
       <h1 class="text-3xl font-bold text-center mb-8">URL Shortener</h1>
 
-      <% if (locals.id) { %>
+      <% if (locals.success) { %>
       <div
+        id="success-message"
         class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4"
         role="alert"
       >
-        <span class="block sm:inline">
-          Shortened URL:
-          <a
-            href="http://localhost:3001/url/<%= id %>"
-            class="font-bold text-blue-500"
-            target="_blank"
-            >http://localhost:3001/url/<%= id %></a
-          >
-        </span>
+        <span class="block sm:inline"><%= success %></span>
         <button
-          onclick="copyToClipboard('http://localhost:3001/url/<%= id %>', this)"
-          class="ml-2 bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-700 copy-btn"
+          onclick="toggleMessage('success-message')"
+          class="absolute top-0 right-0 mt-2 mr-2 text-green-700"
         >
-          <i class="far fa-copy"></i>
+          <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       <% } %> <% if (locals.error) { %>
       <div
+        id="error-message"
         class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
         role="alert"
       >
-        <span class="block sm:inline"><%= error %> </span>
+        <span class="block sm:inline"><%= error %></span>
+        <button
+          onclick="toggleMessage('error-message')"
+          class="absolute top-0 right-0 mt-2 mr-2 text-red-700"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
       <% } %>
 
-      <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <form method="POST" action="/url">
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Enter your URL:</label
-          >
-          <input
-            type="text"
-            name="url"
-            placeholder="https://google.com"
-            class="w-full p-2 border border-gray-300 rounded mb-4"
-          />
-          <button
-            type="submit"
-            class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-700"
-          >
-            Submit
-          </button>
-        </form>
+      <button
+        onclick="toggleModal()"
+        class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+      >
+        New URL
+      </button>
+
+      <div id="url-modal" class="modal">
+        <div class="modal-content">
+          <h2 class="text-2xl font-bold mb-4">Create Short URL</h2>
+          <form method="POST" action="/url">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Enter your URL:</label
+            >
+            <input
+              type="text"
+              name="url"
+              placeholder="https://google.com"
+              class="w-full p-2 border border-gray-300 rounded mb-4"
+            />
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Create your custom slug:</label
+            >
+            <input
+              type="text"
+              name="slug"
+              placeholder="/myPage"
+              class="w-full p-2 border border-gray-300 rounded mb-4"
+            />
+            <button
+              type="submit"
+              class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-700"
+            >
+              Submit
+            </button>
+            <button
+              type="button"
+              onclick="toggleModal()"
+              class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-700 mt-4"
+            >
+              Close
+            </button>
+          </form>
+        </div>
       </div>
 
       <% if (locals.urls) { %>
@@ -111,8 +157,9 @@
                   href="http://localhost:3001/url/<%= url.shortId %>"
                   class="text-blue-500"
                   target="_blank"
-                  >http://localhost:3001/url/<%= url.shortId %></a
                 >
+                  http://localhost:3001/url/<%= url.shortId %>
+                </a>
               </td>
               <td class="text-center px-4 py-2">
                 <button
@@ -169,6 +216,16 @@
         } else {
           alert("Failed to delete the URL");
         }
+      }
+
+      function toggleModal() {
+        const modal = document.getElementById("url-modal");
+        modal.classList.toggle("show");
+      }
+
+      function toggleMessage(id) {
+        const message = document.getElementById(id);
+        message.classList.add("hidden");
       }
     </script>
   </body>
